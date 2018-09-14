@@ -1,0 +1,76 @@
+project: adamhart/keras
+open-webbrowser: false
+name: Examples
+tags: [erghm]
+
+parameters:
+  # Resources
+  nbr_workers: 2
+
+  # Input pipe parameters (Normalization is based in the parameter network_type)
+  aug_crop_flip: true
+  aug_affine: true
+  aug_intensity_seq: true
+  aug_mask_smooth: false
+
+  # Use these options to resize
+  aug_resize_128: false
+  aug_resize_228: false
+  img_size: 101
+  data_path: '/hdd/datasets/TGS/'
+  batch_size: 64
+
+  learning_rate: 0.01
+  model_dir: '/hdd/datasets/TGS/keras_trained'
+  optimizer: 'SGD'  # 'SGD', 'Adam', 'RMSprop'
+  train_epochs: 150
+  resume_from:
+  freeze_encoder_ratio: 0.2  # How long to freeze the encoder (ratio of epochs)
+
+  ### Loss (0 turns off) ###
+  loss_dice_weight: 1.0 # [0.0, 0.5, 1.0]
+  loss_bce_weight: 1.0 # [0.0, 0.5, 1.0]
+  loss_lovaz_weight: 0.0 # [0.0, 0.5, 1.0]
+  focal_loss_weight: 0.00 # [0.0, 1.0]
+  focal_loss_alpha: 2.0
+  focal_loss_gamma: 0.25
+
+  ### Metric ###
+  monitor_metric: 'iou_kaggle_metric'  # 'iou_kaggle_metric' or 'accuracy'
+
+  ### Callback settings ###
+  early_stopping: true
+  early_stopping_patience: 25
+
+  reduce_lr_on_plateau: true
+  rlop_factor: 0.95
+  rlop_patience: 10
+  rlop_min_lr: 0.00001
+
+  tensorboard: true
+
+  # ['vgg16' 'vgg19' 'res50' 'inceptionv3' 'InceptionResNetV2' 'densenet_121' 'densenet_169' 'densenet_201']
+  model_type: 'vgg16'
+  hyper_concat: false # [true, false]  # State whether or not to use hyper-concat at the end of the decoder
+
+  ### Data ###
+  remove_blank_images: False
+  remove_bad_masks: False
+  validation_split: 0.08
+  kfold: 5
+  kfold_nbr: [0, 1, 2, 3, 4]
+
+metric:
+  channel: 'iou_kaggle_metric'
+  goal: maximize
+
+exclude:
+  - output
+  - cache
+  - neptune.log
+  - offline_job.log
+  - .git
+  - .idea
+  - .ipynb_checkpoints
+  - Dockerfiles/base.Dockerfile
+  - token
