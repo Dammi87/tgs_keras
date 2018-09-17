@@ -1,0 +1,31 @@
+{
+    "adamf": [
+        {
+            "build_name": "local",
+            "docker_file" : "keras",
+            "volumes": [["/home/adamf/data/Kaggle/TGS", "/hdd/datasets/TGS/"],["/home/adamf/data", "/data"]],
+            "GUI": false,
+            "ports": ["8050:8050"],
+            "gpu": [0],
+            "build_cmd": "python3 -u",
+            "run_as_module": false,
+            "custom_cmd": ["--network host"]
+        }
+    ],
+    "common": [
+        {
+            "build_name": "build_on_remote",
+            "docker_file" : "keras",
+            "ports": ["8050:8050"],
+            "volumes": [["/hdd/datasets/TGS/", "/hdd/datasets/TGS/"]],
+            "gpu": [1],
+            "GUI": false,
+            "ssh_ip": "10.0.1.173",
+            "ssh_user": "protolab", 
+            "remote_folder": "/hdd/users/",
+            "build_cmd": "neptune run --config ./config/neptune.yaml",
+            "run_as_module": false,
+            "custom_cmd": ["--network host"]
+        }
+    ]
+}

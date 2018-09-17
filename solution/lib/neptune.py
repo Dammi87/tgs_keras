@@ -130,8 +130,10 @@ class ModelCheckpoint(Callback):
                                   % (epoch + 1, self.monitor, self.best,
                                      current, filepath))
                         self.best = current
-                        print('Sending x={}, y={} on {}'.format(epoch, self.best, self._ctx.params['monitor_metric']))
-                        self._ctx.channel_send(self._ctx.params['monitor_metric'], x=epoch, y=self.best)
+                        # Sending the monitor metric
+                        print('Sending x={}, y={} on {}'.format(epoch, self.best, 'val_iou_kaggle_metric'))
+                        self._ctx.channel_send('val_iou_kaggle_metric', x=epoch, y=self.best)
+
                         if self.save_weights_only:
                             self.model.save_weights(filepath, overwrite=True)
                         else:
@@ -140,6 +142,11 @@ class ModelCheckpoint(Callback):
                         if self.verbose > 0:
                             print('\nEpoch %05d: %s did not improve from %0.5f' %
                                   (epoch + 1, self.monitor, self.best))
+
+                    # Get iou and send
+                    current = logs.get('val_loss')
+                    print('Sending x={}, y={} on {}'.format(epoch, current, 'val_loss'))
+                    self._ctx.channel_send('val_loss', x=epoch, y=current)
             else:
                 if self.verbose > 0:
                     print('\nEpoch %05d: saving model to %s' % (epoch + 1, filepath))

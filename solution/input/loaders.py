@@ -140,6 +140,11 @@ class DatasetLoader():
             'id': ids_valid
         }
 
+        # Add flip to train
+        train['x'] = np.concatenate([train['x'], np.stack([np.fliplr(x) for x in train['x']], axis=0)], axis=0)
+        train['y'] = np.concatenate([train['y'], np.stack([np.fliplr(x) for x in train['y']], axis=0)], axis=0)
+        train['id'] = np.concatenate([train['id'], train['id'][::-1]])
+
         return [train, valid]
 
     def _get_test(self):

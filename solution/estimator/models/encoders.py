@@ -1,18 +1,15 @@
 """VGG16 Header pre-trained."""
+import classification_models
 import keras.applications as applications
-from keras.layers import Input, Lambda
-# from solution.estimator.models.custom import get_custom_model
+from keras.layers import Input
 from .blocks import ReflectionPadding2D, upsample_billinear
+from .custom.simple_model_101 import simple_model_101
 
 
-def resnet_up_pad(img_shape):
+def resnet_up_2x(img_shape):
     """Upsample, then pad."""
     def up_pad(x):
-        print("Upsampling the: ", x)
         x = upsample_billinear(x, scale=2)
-        print("\tResult: ", x)
-        x = ReflectionPadding2D(x, padding=[[0, 0], [11, 11], [11, 11], [0, 0]])
-        print("\tResult: ", x)
         return x
     return up_pad
 
@@ -27,36 +24,54 @@ def get_header(header):
         fcn = applications.vgg16.VGG16
         skip_layer_names = ['block1_conv2', 'block2_conv2', 'block3_conv3', 'block4_conv3', 'block5_conv3']
         img_shape = (128, 128, 3)
-        pad_layer = lambda x : ReflectionPadding2D(x, padding=[[0, 0], [14, 13], [14, 13], [0, 0]])
+
+        def pad_layer(x):
+            return ReflectionPadding2D(x, padding=[[0, 0], [14, 13], [14, 13], [0, 0]])
+
     elif header == 'vgg19':
         fcn = applications.vgg19.VGG19
         skip_layer_names = ['block1_conv2', 'block2_conv2', 'block3_conv4', 'block4_conv4', 'block5_conv4']
         img_shape = (128, 128, 3)
-        pad_layer = lambda x: ReflectionPadding2D(x, padding=[[0, 0], [14, 13], [14, 13], [0, 0]])
-    elif header == 'res32_relu':
-        # fcn = get_custom_model(header)
-        skip_layer_names = ['activation_11', 'activation_21']
+
+        def pad_layer(x):
+            return ReflectionPadding2D(x, padding=[[0, 0], [14, 13], [14, 13], [0, 0]])
+
+    elif header == 'res34':
+        fcn = classification_models.ResNet34
+        skip_layer_names = ['relu0', 'stage2_unit1_relu1', 'stage3_unit1_relu1', 'stage4_unit1_relu1']
+        img_shape = (202, 202, 3)
+        pad_layer = resnet_up_2x(img_shape)
+
     elif header == 'res50':
         fcn = applications.resnet50.ResNet50
         skip_layer_names = ['activation_1', 'activation_10', 'activation_22', 'activation_40']
-        img_shape = (228, 228, 3)
-        pad_layer = resnet_up_pad(img_shape)
+        img_shape = (202, 202, 3)
+        pad_layer = resnet_up_2x(img_shape)
+
     elif header == 'inceptionv3':
         # 299x299 for input!
         fcn = applications.inception_v3.InceptionV3
         skip_layer_idx = [228, 86, 16, 9]
+
     elif header == 'InceptionResNetV2':
         fcn = applications.inception_resnet_v2.InceptionResNetV2
         skip_layer_idx = [594, 260, 16, 9]
+
     elif header == 'densenet_121':
         fcn = applications.densenet.DenseNet121
         skip_layer_idx = [311, 139, 51, 4]
+
     elif header == 'densenet_169':
         fcn = applications.densenet.DenseNet169
         skip_layer_idx = [367, 139, 51, 4]
+
     elif header == 'densenet_201':
         fcn = applications.densenet.DenseNet201
         skip_layer_idx = [479, 139, 51, 4]
+
+    elif header == 'simple101':
+        return simple_model_101  # No need to build anything here
+
     else:
         raise NotImplementedError
 
@@ -66,7 +81,7 @@ def get_header(header):
         if pad_layer is not None:
             enc = pad_layer(img_input)
         else:
-            enc = Lambda(lambda x: x, output_shape=(128, 128, 3))(img_input)
+            raise NotImplementedError
 
         # pre_process_model = Model(img_input, enc)
 
@@ -89,9 +104,9 @@ def get_header(header):
     return build_model
 
 
-def get_model(model_type):
+def get_model(encoder_type):
     """Get the correct model."""
-    mdl, skip_layers, img_input = get_header(model_type)()
+    mdl, skip_layers, img_input = get_header(encoder_type)()
 
     return mdl, skip_layers, img_input
 

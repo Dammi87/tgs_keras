@@ -8,9 +8,10 @@ from keras.losses import binary_crossentropy
 def focal_loss(gamma=2., alpha=.25):
     """Implement focal loss."""
     def focal_loss_fixed(y_true, logits):
-        pt_1 = tf.where(tf.equal(y_true, 1), logits, tf.ones_like(logits))
+        pt_1 = tf.clip_by_value(tf.where(tf.equal(y_true, 1), logits, tf.ones_like(logits)), 0.0001, 0.9999)
         pt_0 = tf.where(tf.equal(y_true, 0), logits, tf.zeros_like(logits))
-        return -K.sum(alpha * K.pow(1. - pt_1, gamma) * K.log(pt_1)) - K.sum((1 - alpha) * K.pow(pt_0, gamma) * K.log(1. - pt_0))
+        pt_0_clip = tf.clip_by_value(1. - pt_0, 0.0001, 0.9999)
+        return -K.sum(alpha * K.pow(1. - pt_1, gamma) * K.log(pt_1)) - K.sum((1 - alpha) * K.pow(pt_0, gamma) * K.log(pt_0_clip))
     return focal_loss_fixed
 
 

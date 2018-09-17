@@ -8,12 +8,14 @@ class DataGenerator(keras.utils.Sequence):
 
     def __init__(self,
                  is_training,
+                 is_test,
                  dataset,
                  batch_size=32,
                  shuffle=True,
                  processor=None):
         """Init class."""
         self.is_training = is_training
+        self.is_test = is_test
         self.batch_size = batch_size
         self.dataset = dataset
         self.id = dataset['id']
@@ -59,7 +61,8 @@ class DataGenerator(keras.utils.Sequence):
         X : (n_samples, h, w, n_channels)
         y : (n_samples, h, w)
         """
-        if self.is_training:
+        # If not test set, get both img and masks
+        if not self.is_test:
             x = np.take(self.images, list_ids_tmp, axis=0)
             y = np.take(self.masks, list_ids_tmp, axis=0)
         else:
@@ -67,12 +70,15 @@ class DataGenerator(keras.utils.Sequence):
 
         # Apply processor if available.
         if self.processor:
+            # Now, if we are testing only, apply normalization and return
+            if self.is_test:
+                return self.processor.apply_image_normalization(x)
+
+            # If we are training, apply augmentations and return
             if self.is_training:
                 x, y = self.processor.apply(x, y)
-            else:
-                x = self.processor.apply_image_normalization(x)
+                return x, y
 
-        if self.is_training:
+            # If we make it here, we are validating, only normalize.
+            x, y = self.processor.apply_normalization(x, y)
             return x, y
-        else:
-            return x

@@ -68,7 +68,6 @@ class ImageProcessor:
         # Change out normalization
         self.apply_image_normalization = self._normalize_method['img']
         self.apply_mask_normalization = self._normalize_method['mask']
-        self.output_image_channels = self._normalize_method['img_channels']
 
     def apply_preprocess(self, img, batch_size=10):
         """Apply image preprocessing steps."""
@@ -162,6 +161,6 @@ def get_processor():
             print("Applied %s" % param)
 
     # Apply normalization method
-    augmenter.set_normalization_method(aug.get_norm_method(params['model_type']))
+    augmenter.set_normalization_method(aug.get_norm_method(params['encoder_decoder']))
 
     return augmenter

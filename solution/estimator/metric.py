@@ -51,8 +51,9 @@ def iou_metric(y_true_in, y_pred_in, print_table=False):
     return np.mean(prec)
 
 
-def iou_metric_batch(y_true_in, y_pred_in):
-    y_pred_in = y_pred_in > 0.5  # added by sgx 20180728
+def iou_metric_batch(y_true_in, y_pred_in, t=0.5):
+    """Calculat emetric batch-wise."""
+    y_pred_in = y_pred_in > t  # added by sgx 20180728
     batch_size = y_true_in.shape[0]
     metric = []
     for batch in range(batch_size):
@@ -62,5 +63,24 @@ def iou_metric_batch(y_true_in, y_pred_in):
 
 
 def iou_kaggle_metric(label, pred):
+    """Return kaggle metric."""
     metric_value = tf.py_func(iou_metric_batch, [label, pred], tf.float64)
     return metric_value
+
+
+def iou_kaggle_metric_scan():
+    """Same as above, except t is scanned over multiple values."""
+    metric_methods = []
+    for t in np.linspace(0, 1, 20):
+        def outer_wrap(label, pred, t=t):
+            def wrapped(label, pred, t=t):
+                return iou_metric_batch(label, pred, t)
+            return tf.py_func(wrapped, [label, pred], tf.float64)
+
+        # Create a method name
+        fcn_name = 'iou_%d' % (int(t * 100))
+        # Assign
+        exec('%s = outer_wrap' % fcn_name)
+        exec('metric_methods.append(%s)' % fcn_name)
+
+    return metric_methods
